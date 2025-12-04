@@ -1,0 +1,23 @@
+% ========== Global Style Definitions ==========
+
+% --- Table column short style ---
+\newenvironment{entity-table}{
+  \begin{longtable}{@{}p{0.20\linewidth} p{0.15\linewidth} p{0.10\linewidth} p{0.10\linewidth} p{0.40\linewidth}@{}}
+  \toprule
+  \textbf{Column Name} & \textbf{Data Type} & \textbf{Length} & \textbf{Nullable} & \textbf{Description} \\
+  \midrule
+}{
+  \bottomrule
+  \end{longtable}
+}
+
+% --- Metadata table (2 columns) ---
+\newenvironment{entity-metatable}{
+  \begin{longtable}{@{}p{0.25\linewidth} p{0.70\linewidth}@{}}
+  \toprule
+  \textbf{Property} & \textbf{Description} \\
+  \midrule
+}{
+  \bottomrule
+  \end{longtable}
+}

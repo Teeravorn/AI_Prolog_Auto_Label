@@ -1,0 +1,24 @@
+% --- JavaScript / TypeScript ---
+\definecolor{jskeyword}{RGB}{0,102,204}
+\definecolor{jsstring}{RGB}{163,21,21}
+\definecolor{jscomment}{RGB}{0,128,0}
+\definecolor{jsnumber}{RGB}{128,0,128}
+\definecolor{jsbg}{RGB}{248,248,248}
+
+\lstdefinelanguage{JavaScript}{
+  keywords={break,case,catch,class,const,continue,debugger,default,delete,do,else,export,extends,
+  finally,for,function,if,import,in,instanceof,new,return,super,switch,this,throw,try,
+  typeof,var,void,while,with,yield,let,static,async,await},
+  keywordstyle=\color{jskeyword}\bfseries,
+  comment=[l]{//},
+  morecomment=[s]{/*}{*/},
+  commentstyle=\color{jscomment}\itshape,
+  stringstyle=\color{jsstring},
+  morestring=[b]', morestring=[b]",
+  numberstyle=\tiny\color{gray},
+  backgroundcolor=\color{jsbg}
+}
+
+\lstdefinelanguage{TypeScript}[]{JavaScript}{
+  morekeywords={type,interface,readonly,enum,implements,namespace,abstract,declare}
+}

@@ -1,0 +1,16 @@
+% --- Listings Languages Setup ---
+\usepackage{listings}
+\usepackage{xcolor}
+
+% โหลดภาษา
+\input{tex/listings/js}
+\input{tex/listings/sql}
+\input{tex/listings/csharp}
+
+% --- Default Code Style ---
+\lstdefinestyle{code}{
+  basicstyle=\ttfamily\small,
+  numbers=left, numberstyle=\tiny, stepnumber=1, numbersep=5pt,
+  showstringspaces=false, breaklines=true, frame=single,
+  tabsize=2, backgroundcolor=\color{gray!3}
+}

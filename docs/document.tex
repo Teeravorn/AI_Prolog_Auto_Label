@@ -1,0 +1,484 @@
+% !TEX program = xelatex
+\documentclass[11pt,a4paper]{article}
+
+\input{tex/fonts}
+\input{header}
+\input{tex/captions}
+\input{tex/package}
+\input{tex/hyperref}
+\input{tex/macros}
+\input{tex/listings/index}
+\input{tex/styles/index}
+
+% Define degree and micro symbols if not available
+\providecommand{\textdegree}{\ensuremath{^\circ}}
+\providecommand{\textmu}{\ensuremath{\mu}}
+
+% Prolog syntax highlighting
+\lstdefinestyle{prologstyle}{
+    language=Prolog,
+    basicstyle=\ttfamily\small,
+    keywordstyle=\color{blue}\bfseries,
+    commentstyle=\color{green!50!black},
+    stringstyle=\color{red},
+    showstringspaces=false,
+    breaklines=true,
+    frame=single,
+    numbers=left,
+    numberstyle=\tiny\color{gray}
+}
+
+\lstdefinestyle{pythonstyle}{
+    language=Python,
+    basicstyle=\ttfamily\small,
+    keywordstyle=\color{blue}\bfseries,
+    commentstyle=\color{green!50!black},
+    stringstyle=\color{red},
+    showstringspaces=false,
+    breaklines=true,
+    frame=single,
+    numbers=left,
+    numberstyle=\tiny\color{gray}
+}
+
+\title{ระบบติดป้ายกำกับข้อมูลอัตโนมัติด้วย AI\\โดยใช้ Prolog และ Large Language Models}
+\author{ระบบ Auto-Labeling Engine สำหรับข้อมูลตารางทั่วไป}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+บทความนี้นำเสนอระบบติดป้ายกำกับข้อมูลอัตโนมัติที่ผลรวมความสามารถในการให้เหตุผลของ Prolog เข้ากับความเข้าใจภาษาธรรมชาติของ Large Language Models (LLMs) ระบบนี้ช่วยให้ผู้เชี่ยวชาญในสาขาต่างๆ สามารถแสดงกฎการติดป้ายกำกับด้วยภาษาธรรมชาติ ซึ่งจะถูกแปลงเป็นประพจน์ First-Order Logic Prolog โดยอัตโนมัติผ่าน Gemini API จากนั้นกฎเหล่านี้จะถูกนำไปใช้กับข้อมูลในรูปแบบ CSV โดยใช้ PySwip ซึ่งเป็นตัวเชื่อมระหว่าง Python และ Prolog ระบบสามารถรองรับกฎแบบลูกโซ่ (Chain Rules) สำหรับตัวตรรกะที่ซับซ้อน การจำแนกหลายป้ายกำกับพร้อมกัน (Multi-label) และมีระบบแสดงผลกราฟอัตโนมัติ เรานำเสนอ Auto-Labeling Engine ใหม่ที่ออกแบบมาเพื่อรองรับข้อมูลตารางทั่วไป (Tabular Data) และสามารถปรับใช้กับโดเมนต่างๆ ได้อย่างง่ายดายผ่านการตั้งค่า JSON โดยไม่ต้องเปลี่ยนโค้ด
+\end{abstract}
+
+\section{บทนำ}
+
+การติดป้ายกำกับข้อมูล (Data Labeling) เป็นงานที่สำคัญแต่ใช้แรงงานมากในกระบวนการเตรียมข้อมูลสำหรับการเรียนรู้ของเครื่อง (Machine Learning) และการวิเคราะห์ข้อมูล วิธีการแบบดั้งเดิมต้องอาศัยการอธิบายด้วยตนเองจากผู้เชี่ยวชาญหรือใช้ระบบกฎที่ต้องเขียนโปรแกรมที่ซับซ้อน งานวิจัยนี้นำเสนอแนวทางแบบผสมผสาน (Hybrid Approach) ที่:
+
+\begin{enumerate}
+    \item รับคำอธิบายกฎในรูปแบบภาษาธรรมชาติจากผู้เชี่ยวชาญ
+    \item แปลงเป็นตรรกะเชิงรูปแบบ (Formal Logic) โดยอัตโนมัติด้วย Prolog
+    \item ประยุกต์ใช้กฎเหล่านี้กับข้อมูลขนาดใหญ่อย่างสม่ำเสมอ
+    \item รองรับการให้เหตุผลที่ซับซ้อนผ่าน Chain Rules
+    \item ให้ข้อมูลป้อนกลับและการตรวจสอบผ่านภาพ (Visual Feedback)
+\end{enumerate}
+
+\subsection{Auto-Labeling Engine ที่พัฒนาขึ้นใหม่}
+
+เราได้พัฒนา Auto-Labeling Engine ที่ออกแบบมาโดยเฉพาะสำหรับข้อมูลตารางทั่วไป (Generic Tabular Data) โดย Engine นี้มีคุณสมบัติหลักดังนี้:
+
+\begin{itemize}
+    \item \textbf{Configuration-Driven Architecture}: สามารถปรับใช้กับข้อมูลชุดใหม่ได้โดยแก้ไขแค่ไฟล์ JSON โดยไม่ต้องเปลี่ยนโค้ด
+    \item \textbf{Point-based Inference}: ประมวลผลการให้เหตุผล (Inference) แบบ Row-by-Row โดยพิจารณาค่าของแต่ละจุดข้อมูลในขณะนั้น
+    \item \textbf{Dynamic Prolog Integration}: โหลดและประมวลผลกฎ Prolog แบบไดนามิก รองรับ Chain Rules และ Helper Predicates
+    \item \textbf{Multi-domain Support}: รองรับหลากหลายสาขา เช่น การตรวจสอบคุณภาพอากาศ, การติดตามสุขภาพ, การควบคุมคุณภาพในอุตสาหกรรม
+    \item \textbf{Automatic Visualization}: สร้างกราฟแสดงผลอัตโนมัติสำหรับการวิเคราะห์ข้อมูลเชิงเวลา (Time-series Analysis)
+\end{itemize}
+
+ความแตกต่างจากระบบอื่นๆ คือ Engine ของเราเน้นความง่ายในการใช้งานสำหรับผู้ที่ไม่มีความรู้ด้านการเขียนโปรแกรม โดยใช้ภาษาธรรมชาติเป็นอินเทอร์เฟซหลัก และรักษาความสามารถในการอธิบายได้ (Explainability) ผ่าน Prolog Rules ที่มนุษย์อ่านเข้าใจได้
+
+\section{สถาปัตยกรรมระบบ}
+
+\subsection{องค์ประกอบหลัก}
+
+ระบบประกอบด้วย 4 ส่วนหลัก:
+
+\begin{enumerate}
+    \item \textbf{ส่วนติดต่อผู้ใช้แบบภาษาธรรมชาติ (Natural Language Interface)}: ใช้ Tkinter GUI รับข้อมูลจากผู้ใช้
+    \item \textbf{ตัวแปลภาษาด้วย LLM (LLM Translation Engine)}: ใช้ Gemini API แปลงภาษาธรรมชาติเป็นกฎ Prolog
+    \item \textbf{ตัวประมวลผลตรรกะ Prolog (Prolog Inference Engine)}: ใช้ PySwip นำกฎไปใช้กับข้อมูล
+    \item \textbf{ส่วนแสดงผลกราฟ (Visualization Module)}: ใช้ Matplotlib แสดงผลการวิเคราะห์ข้อมูลเชิงเวลา
+\end{enumerate}
+
+\subsection{ขั้นตอนการทำงาน}
+
+\begin{enumerate}
+    \item ผู้ใช้ป้อนกฎเป็นภาษาธรรมชาติ (ไทยหรืออังกฤษ)
+    \item ระบบโหลดการตั้งค่าสำหรับ Use Case ที่เลือก
+    \item Gemini API แปลงเป็นประพจน์ Prolog
+    \item ตรวจสอบและบันทึกกฎพร้อม Timestamp
+    \item PySwip โหลดกฎและ Query แต่ละแถวข้อมูล
+    \item ติดป้ายกำกับและบันทึกลง CSV พร้อม Metadata
+    \item แสดงผลรูปแบบกราฟและการกระจายตัวของป้ายกำกับ
+\end{enumerate}
+
+\subsection{Auto-Labeling Engine Architecture}
+
+Engine ที่เราพัฒนาขึ้นมีสถาปัตยกรรมแบบ Modular ที่แยกส่วนการทำงานออกเป็นโมดูลต่างๆ:
+
+\begin{itemize}
+    \item \textbf{Configuration Manager} (\texttt{query\_engine\_config.py}): จัดการการตั้งค่าทั้งหมด รวมทั้ง path, ชื่อไฟล์, และการแมปตัวแปร
+    \item \textbf{Rule Parser} (\texttt{extract\_predicates\_from\_rules}): แยกวิเคราะห์กฎ Prolog เพื่อหาชื่อ Predicate, จำนวนและชื่อของ Arguments
+    \item \textbf{Data Mapper}: แปลงข้อมูลจาก CSV เป็นรูปแบบที่ Prolog เข้าใจได้ (เช่น Time ``HH:MM'' $\rightarrow$ Integer Hour)
+    \item \textbf{Inference Engine} (\texttt{apply\_rule\_to\_csv}): ประมวลผลแต่ละแถวด้วย Point-based Inference
+    \item \textbf{Visualization Generator} (\texttt{plot\_labeled\_results}): สร้างกราฟแสดงผลอัตโนมัติ
+\end{itemize}
+
+\section{วิธีการ (Methodology)}
+
+\subsection{การแปลงภาษาธรรมชาติเป็น Prolog}
+
+ระบบใช้ Prompt Template ที่ออกแบบมาอย่างละเอียดซึ่งระบุ:
+
+\begin{itemize}
+    \item ไวยากรณ์ Prolog และตัวดำเนินการที่ถูกต้อง ($\leq$, $\geq$, $>$, $<$)
+    \item รูปแบบ Predicate แบบหลายอาร์กิวเมนต์: \texttt{predicate(Var1, Var2, ..., 'label') :- conditions}
+    \item กฎการตั้งชื่อตัวแปร (ตัวแปรขึ้นต้นด้วยตัวพิมพ์ใหญ่, predicates เป็นตัวพิมพ์เล็ก)
+    \item รูปแบบ Chain Rules สำหรับตรรกะที่ซับซ้อน
+\end{itemize}
+
+\textbf{ตัวอย่างการแปลง:}
+
+\textit{Input (ภาษาธรรมชาติ):}
+\begin{quote}
+``จำแนกคุณภาพอากาศเป็น 3 ระดับ: ดี (PM2.5 < 25), ปานกลาง (PM2.5 25-50), แย่ (PM2.5 > 50)''
+\end{quote}
+
+\textit{Output (Prolog):}
+\begin{lstlisting}[style=prologstyle]
+good_pm(PM2_5) :- PM2_5 < 25.
+moderate_pm(PM2_5) :- PM2_5 >= 25, PM2_5 =< 50.
+poor_pm(PM2_5) :- PM2_5 > 50.
+
+label_air_quality(PM2_5, 'ดี') :- good_pm(PM2_5).
+label_air_quality(PM2_5, 'ปานกลาง') :- moderate_pm(PM2_5).
+label_air_quality(PM2_5, 'แย่') :- poor_pm(PM2_5).
+\end{lstlisting}
+
+\subsection{การรองรับ Chain Rules}
+
+ระบบรองรับการให้เหตุผลแบบลำดับชั้นผ่าน Helper Predicates:
+
+\begin{lstlisting}[style=prologstyle]
+% Helper predicates (ไม่มี label argument)
+high_pm(PM2_5) :- PM2_5 > 50.
+high_temp(Temperature) :- Temperature > 25.
+
+% กฎการติดป้ายกำกับหลัก (ใช้ helpers)
+label_condition(PM2_5, Temperature, 'ต้องเฝ้าระวัง') :- 
+    high_pm(PM2_5), high_temp(Temperature).
+\end{lstlisting}
+
+\subsection{กระบวนการใช้กฎ (Point-based Inference)}
+
+สำหรับแต่ละแถวในชุดข้อมูล:
+
+\begin{enumerate}
+    \item แยกค่าและแมปกับตัวแปร Prolog
+    \item แปลงชนิดข้อมูล (เช่น ``HH:MM'' $\rightarrow$ ชั่วโมงเป็นจำนวนเต็ม)
+    \item Assert facts เข้าไปใน Prolog Knowledge Base
+    \item Query ทุก Label Predicates ด้วยค่าของแถวปัจจุบัน
+    \item รวบรวมป้ายกำกับที่ตรงเงื่อนไข (single-label หรือ multi-label)
+    \item Retract facts เพื่อเตรียมสำหรับแถวถัดไป
+\end{enumerate}
+
+\textbf{หมายเหตุสำคัญ}: กระบวนการนี้เป็นแบบ \textit{stateless} คือแต่ละแถวถูกประมวลผลอิสระจากกัน ไม่มีการเก็บข้อมูลจากแถวก่อนหน้า ดังนั้น \textbf{ไม่สามารถใช้กฎที่ต้องการเปรียบเทียบกับข้อมูลย้อนหลังได้} เช่น:
+\begin{itemize}
+    \item ``ถ้าค่าลดลง 5 หน่วยจากแถวก่อนหน้า''
+    \item ``ถ้าค่าเฉลี่ยของ 3 แถวล่าสุดมากกว่า 50''
+\end{itemize}
+
+\section{Implementation Details}
+
+\subsection{Configuration Management}
+
+The system uses JSON configuration files for each use case:
+
+\begin{lstlisting}[style=pythonstyle]
+{
+  "use_case": "PM_Temperature",
+  "prolog_variables": [
+    {"csv_column": "Temp", "prolog_name": "Temperature"},
+    {"csv_column": "PM2.5", "prolog_name": "PM2_5"},
+    {"csv_column": "Time", "prolog_name": "TimeHour"}
+  ],
+  "labeling": {
+    "label_column": "auto_label",
+    "multi_label": true
+  }
+}
+\end{lstlisting}
+
+\subsection{Argument Parsing}
+
+Critical feature: The system parses Prolog rules to extract argument names and order:
+
+\begin{lstlisting}[style=pythonstyle]
+def extract_predicates_from_rules(rule_file):
+    # Parse: predicate(Arg1, Arg2, ..., 'Label') :- condition
+    match = re.search(r"(\w+)\((.+),\s*'([^']+)'\)\s*:-", line)
+    arg_list = [a.strip() for a in args_str.split(',')]
+    # Handles underscore variables: _, _Var
+\end{lstlisting}
+
+\subsection{Visualization}
+
+The system automatically generates two-panel visualizations:
+
+\begin{enumerate}
+    \item \textbf{Time Series Plot}: Shows PM2.5 and Temperature trends with labeled regions highlighted as colored spans
+    \item \textbf{Distribution Chart}: Bar chart showing frequency of each label
+\end{enumerate}
+
+Consecutive data points with the same label are grouped into shaded regions, reducing visual clutter.
+
+\section{กรณีศึกษา: ระบบตรวจสอบคุณภาพอากาศ PM2.5}
+
+\subsection{ชุดข้อมูล}
+
+เราใช้ข้อมูลคุณภาพอากาศเป็นตัวอย่างการใช้งานระบบ (ไม่ใช่จุดเน้นหลักของ Engine):
+
+\begin{itemize}
+    \item \textbf{แหล่งข้อมูล}: การวัด 72 ชั่วโมงต่อเนื่อง (3 วัน)
+    \item \textbf{Features}: อุณหภูมิ (\textdegree C), PM2.5 (\textmu g/m\textsuperscript{3}), เวลา (HH:MM)
+    \item \textbf{วัตถุประสงค์}: จำแนกสภาพคุณภาพอากาศ
+\end{itemize}
+
+\textbf{หมายเหตุ}: กรณีศึกษานี้เป็นเพียงตัวอย่างหนึ่งของการประยุกต์ใช้ Engine ที่เราพัฒนาขึ้น ระบบสามารถใช้กับข้อมูลตารางทั่วไปในสาขาอื่นๆ ได้เช่นกัน เช่น:
+\begin{itemize}
+    \item การติดตามสัญญาณชีพของผู้ป่วย (อุณหภูมิร่างกาย, ชีพจร, ความดันโลหิต)
+    \item การตรวจสอบคุณภาพผลิตภัณฑ์ในโรงงาน (ขนาด, น้ำหนัก, อุณหภูมิ)
+    \item การวิเคราะห์ข้อมูลการเงิน (ราคา, ปริมาณการซื้อขาย, ตัวชี้วัดทางเทคนิค)
+\end{itemize}
+
+\subsection{ตัวอย่างกฎ}
+
+\textbf{กฎที่ 1 - การจำแนกแบบง่าย:}
+\begin{lstlisting}[style=prologstyle]
+air_quality(PM2_5, 'ดี') :- PM2_5 < 25.
+air_quality(PM2_5, 'ปานกลาง') :- PM2_5 >= 25, PM2_5 =< 50.
+air_quality(PM2_5, 'แย่') :- PM2_5 > 50.
+\end{lstlisting}
+
+\textbf{กฎที่ 2 - Multi-Variable พร้อม Chain Rules:}
+\begin{lstlisting}[style=prologstyle]
+poor_pm(PM2_5) :- PM2_5 > 50.
+high_temp_for_monitoring(Temperature) :- Temperature > 25.
+
+label_overall_condition(PM2_5, Temperature, 'ต้องเฝ้าระวัง') :- 
+    poor_pm(PM2_5), 
+    high_temp_for_monitoring(Temperature).
+\end{lstlisting}
+
+\subsection{ผลลัพธ์}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{@{}lcc@{}}
+\toprule
+\textbf{ป้ายกำกับ} & \textbf{จำนวน} & \textbf{เปอร์เซ็นต์} \\ \midrule
+ปานกลาง & 37 & 51.4\% \\
+แย่ & 35 & 48.6\% \\
+ดี & 0 & 0\% \\ \bottomrule
+\end{tabular}
+\caption{การกระจายตัวของป้ายกำกับคุณภาพอากาศ PM2.5}
+\end{table}
+
+ระบบระบุช่วงเวลาที่มีคุณภาพอากาศแย่ (PM2.5 > 50) และปานกลางได้สำเร็จ โดยไม่มีการอ่านค่า ``ดี'' ในช่วงมลพิษนี้
+
+\subsection{ข้อสังเกตสำคัญ}
+
+กฎเหล่านี้เป็น \textbf{Point-based Rules} คือพิจารณาเฉพาะค่า ณ เวลานั้นๆ หากต้องการกฎที่ซับซ้อนขึ้น เช่น:
+\begin{itemize}
+    \item ``ถ้า PM2.5 เพิ่มขึ้น 20 หน่วยภายใน 2 ชั่วโมง ให้เตือนว่ามลพิษเพิ่มขึ้นอย่างรวดเร็ว''
+\end{itemize}
+
+Engine ปัจจุบัน\textbf{ยังไม่รองรับ}เพราะต้องการข้อมูลย้อนหลัง ซึ่งเป็นส่วนหนึ่งของงานพัฒนาในอนาคต
+
+\section{คุณสมบัติหลัก}
+
+\subsection{การจัดเก็บกฎแบบ Timestamped}
+
+กฎที่สร้างขึ้นทั้งหมดจะถูกบันทึกพร้อม Timestamp:
+\begin{verbatim}
+generated_rules_20251205_011531.pl
+\end{verbatim}
+
+วิธีนี้ช่วยเก็บประวัติและเปรียบเทียบชุดกฎต่างๆ ได้
+
+\subsection{การรองรับ Multi-Label}
+
+ระบบสามารถติดหลายป้ายกำกับพร้อมกันได้:
+\begin{verbatim}
+แถวที่ 34: "แย่; ต้องเฝ้าระวัง"
+\end{verbatim}
+
+\subsection{การติดตาม Metadata}
+
+CSV ที่ผลลัพธ์จะมี:
+\begin{itemize}
+    \item คอลัมน์ข้อมูลเดิม
+    \item \texttt{auto\_label}: ป้ายกำกับที่ถูกติด
+    \item \texttt{rules\_file}: ชื่อไฟล์กฎที่ถูกใช้
+\end{itemize}
+
+\subsection{Configuration-Driven Design}
+
+ผู้ใช้สามารถปรับใช้กับข้อมูลชุดใหม่ได้โดยแก้ไขเฉพาะไฟล์ JSON:
+\begin{itemize}
+    \item กำหนด CSV columns และ Prolog variable mapping
+    \item ระบุ path สำหรับไฟล์ input/output
+    \item เลือก single-label หรือ multi-label mode
+    \item กำหนด prompt template เป็นภาษาไทยหรืออังกฤษ
+\end{itemize}
+
+ไม่ต้องเปลี่ยนโค้ด Python เลย - เพียงแค่สร้าง use case ใหม่ในโฟลเดอร์ \texttt{KB/}
+
+\section{ข้อดี}
+
+\begin{enumerate}
+    \item \textbf{ใช้งานง่าย}: ผู้เชี่ยวชาญในสาขาต่างๆ สามารถเขียนกฎด้วยภาษาธรรมชาติได้
+    \item \textbf{อธิบายได้ (Explainable)}: กฎ Prolog อ่านและตรวจสอบได้โดยมนุษย์
+    \item \textbf{สม่ำเสมอ (Consistent)}: กฎเดียวกันถูกใช้กับข้อมูลทั้งหมดอย่างเท่าเทียม
+    \item \textbf{ยืดหยุ่น (Flexible)}: รองรับตรรกะที่ซับซ้อนผ่าน Chain Rules
+    \item \textbf{ตรวจสอบย้อนกลับได้ (Traceable)}: กฎถูกบันทึกพร้อม Timestamp และ Metadata
+    \item \textbf{แสดงผลกราฟ (Visual)}: สร้างกราฟอัตโนมัติสำหรับการตรวจสอบผลลัพธ์
+    \item \textbf{Generic และใช้ซ้ำได้}: Engine รองรับข้อมูลตารางทั่วไป ปรับใช้กับ Domain ใหม่ได้ง่าย
+\end{enumerate}
+
+\section{ข้อจำกัดและงานในอนาคต}
+
+\subsection{ข้อจำกัดปัจจุบัน}
+
+\begin{enumerate}
+    \item \textbf{ขึ้นอยู่กับคุณภาพของ LLM}: การแปลภาษาธรรมชาติเป็น Prolog ขึ้นอยู่กับความสามารถของ Gemini API ซึ่งอาจสร้างกฎที่ไม่ถูกต้องในบางกรณี
+    
+    \item \textbf{Singleton Variable Warnings}: หากกฎไม่ใช้ตัวแปรบางตัว Prolog จะแสดงคำเตือน ซึ่งต้องแก้ไขด้วยการใช้ underscore (\texttt{\_})
+    
+    \item \textbf{จำกัดรูปแบบข้อมูล}: ปัจจุบันรองรับเฉพาะข้อมูลตาราง (Tabular Data) ในรูปแบบ CSV เท่านั้น
+    
+    \item \textbf{Point-based Inference เท่านั้น - ข้อจำกัดสำคัญของ Engine}:
+    
+    Engine ที่เราพัฒนาขึ้นทำงานแบบ \textit{point-based inference} คือพิจารณาเฉพาะค่าของแต่ละแถวข้อมูล ณ จุดนั้นๆ เท่านั้น \textbf{ไม่สามารถคำนวณย้อนหลังหรือเปรียบเทียบกับจุดข้อมูลก่อนหน้าได้}
+    
+    \textbf{ตัวอย่างกฎที่ยังไม่รองรับ:}
+    \begin{itemize}
+        \item ``ถ้าอุณหภูมิลดลงมากกว่า 3 องศาภายใน 3 ชั่วโมง ให้ติดป้ายว่า `ลดลงอย่างรวดเร็ว'"
+        \item ``ถ้า PM2.5 เพิ่มขึ้น 20\% จากค่าเฉลี่ยของ 5 ชั่วโมงที่ผ่านมา''
+        \item ``ถ้าแนวโน้มเป็นขาขึ้นต่อเนื่อง 4 ช่วงเวลาติดต่อกัน''
+    \end{itemize}
+    
+    กฎเหล่านี้ต้องการ \textit{temporal context} หรือการเข้าถึงข้อมูลก่อนหน้า ซึ่ง Engine ปัจจุบันไม่รองรับเพราะออกแบบมาให้ประมวลผลแต่ละจุดอิสระจากกัน (Stateless row-by-row processing)
+    
+    \textbf{เหตุผลทางเทคนิค:}
+    \begin{itemize}
+        \item Prolog facts ถูก assert และ retract ในแต่ละ iteration ไม่มีการเก็บประวัติ
+        \item Query string สร้างจากค่าของแถวปัจจุบันเท่านั้น
+        \item ไม่มี sliding window หรือ temporal aggregation mechanism
+    \end{itemize}
+    
+    \item \textbf{ไม่มีการตรวจจับความขัดแย้งของกฎ}: หากมีกฎที่ขัดแย้งกัน ระบบจะรายงานทุกป้ายกำกับที่ตรงเงื่อนไข (ใน multi-label mode) หรือใช้กฎแรกที่ตรงเงื่อนไข (ใน single-label mode)
+\end{enumerate}
+
+\subsection{การพัฒนาในอนาคต}
+
+\begin{enumerate}
+    \item \textbf{รองรับ Temporal Rules และ Historical Context}:
+    \begin{itemize}
+        \item เพิ่ม Sliding Window Mechanism สำหรับเข้าถึงข้อมูลก่อนหน้า
+        \item รองรับการคำนวณ Trend Analysis (ขาขึ้น, ขาลง, อัตราการเปลี่ยนแปลง)
+        \item เพิ่ม Temporal Predicates เช่น \texttt{decreased\_by(Variable, Amount, TimeWindow)}
+        \item เก็บ Historical Facts ใน Prolog Knowledge Base แทนการ retract ทุกครั้ง
+    \end{itemize}
+    
+    \item \textbf{รองรับรูปแบบข้อมูลเพิ่มเติม}: JSON, ฐานข้อมูล (SQL/NoSQL), Time-series databases
+    
+    \item \textbf{การปรับแต่งกฎแบบโต้ตอบ (Interactive Rule Refinement)}:
+    \begin{itemize}
+        \item แสดงตัวอย่างผลลัพธ์แบบ Real-time
+        \item เสนอแนะการแก้ไขกฎที่อาจมีปัญหา
+        \item Validation feedback loop
+    \end{itemize}
+    
+    \item \textbf{การผสานกับ Active Learning}: ใช้ผลลัพธ์จาก Auto-labeling เป็น Initial labels สำหรับโมเดล ML
+    
+    \item \textbf{การตรวจจับและแก้ไขความขัดแย้งของกฎ}: 
+    \begin{itemize}
+        \item วิเคราะห์กฎทั้งหมดเพื่อหาความขัดแย้ง
+        \item เสนอแนะลำดับความสำคัญของกฎ (Rule Priority)
+    \end{itemize}
+    
+    \item \textbf{Export กฎไปรูปแบบอื่น}: Decision Trees, Rule-based Neural Networks, PMML
+    
+    \item \textbf{การเพิ่มประสิทธิภาพ}:
+    \begin{itemize}
+        \item Parallel processing สำหรับข้อมูลขนาดใหญ่
+        \item Caching mechanism สำหรับ Helper Predicates
+        \item Incremental labeling (label เฉพาะข้อมูลใหม่)
+    \end{itemize}
+\end{enumerate}
+
+\section{สรุป}
+
+ระบบนี้แสดงให้เห็นถึงประสิทธิผลของการผสมผสาน Symbolic AI (Prolog) กับ LLMs สมัยใหม่สำหรับการติดป้ายกำกับข้อมูลอัตโนมัติ โดยการให้ผู้เชี่ยวชาญแสดงกฎด้วยภาษาธรรมชาติ ในขณะที่รักษาความเข้มงวดทางตรรกะผ่าน Prolog ระบบนี้เชื่อมช่องว่างระหว่างความสะดวกในการใช้งานกับการให้เหตุผลเชิงรูปแบบ
+
+\subsection{Auto-Labeling Engine ที่พัฒนาขึ้น}
+
+เราได้พัฒนา Auto-Labeling Engine แบบใหม่ที่มีคุณสมบัติสำคัญดังนี้:
+
+\begin{itemize}
+    \item \textbf{Generic และ Reusable}: ออกแบบมาสำหรับข้อมูลตารางทั่วไป ไม่ผูกติดกับ domain ใดโดยเฉพาะ
+    \item \textbf{Configuration-Driven}: ปรับใช้กับ use case ใหม่ได้โดยแค่แก้ไขไฟล์ JSON
+    \item \textbf{Explainable AI}: กฎ Prolog สามารถอ่านและตรวจสอบได้โดยมนุษย์
+    \item \textbf{Point-based Inference}: ประมวลผลแต่ละแถวอิสระจากกัน เหมาะสำหรับกฎที่พิจารณาค่า ณ ขณะนั้น
+    \item \textbf{Chain Rules Support}: รองรับการให้เหตุผลแบบลำดับชั้นผ่าน Helper Predicates
+\end{itemize}
+
+สถาปัตยกรรมแบบเปิด (Open Architecture) ที่ใช้การตั้งค่า JSON ทำให้ระบบสามารถปรับใช้กับหลากหลายสาขาได้ เช่น:
+\begin{itemize}
+    \item การตรวจสอบคุณภาพอากาศและสิ่งแวดล้อม
+    \item การติดตามสุขภาพและอาการทางการแพทย์
+    \item การตรวจสอบการปฏิบัติตามกฎระเบียบทางการเงิน
+    \item การควบคุมคุณภาพในอุตสาหกรรม
+    \item การวิเคราะห์ข้อมูลทางวิทยาศาสตร์
+\end{itemize}
+
+\subsection{ข้อจำกัดที่ต้องคำนึงถึง}
+
+ผู้ใช้ควรทราบว่า Engine ปัจจุบัน \textbf{ไม่รองรับกฎที่ต้องการข้อมูลย้อนหลังหรือการเปรียบเทียบกับจุดข้อมูลก่อนหน้า} เช่น กฎที่เกี่ยวกับ:
+\begin{itemize}
+    \item การเปลี่ยนแปลงในช่วงเวลา (``ลดลง X หน่วยภายใน Y ชั่วโมง'')
+    \item การคำนวณค่าเฉลี่ยเคลื่อนที่ (Moving Average)
+    \item การวิเคราะห์แนวโน้ม (Trend Analysis)
+\end{itemize}
+
+ข้อจำกัดนี้เกิดจากการออกแบบ Point-based Inference ที่ประมวลผลแต่ละแถวอิสระจากกัน การพัฒนาในอนาคตจะเพิ่ม Temporal Context Support เพื่อรองรับกฎประเภทนี้
+
+\subsection{ผลงานหลัก}
+
+งานวิจัยนี้มีส่วนสนับสนุนหลักดังนี้:
+\begin{enumerate}
+    \item \textbf{Auto-Labeling Engine ใหม่}: ระบบ Generic สำหรับข้อมูลตารางที่ใช้งานง่ายและอธิบายได้
+    \item \textbf{การผสานระหว่าง LLM และ Symbolic AI}: เชื่อม Natural Language Interface เข้ากับ Logical Reasoning
+    \item \textbf{Configuration-Driven Architecture}: ลดความซับซ้อนในการปรับใช้กับ domain ใหม่
+    \item \textbf{Point-based Inference Methodology}: วิธีการที่ชัดเจนและมีประสิทธิภาพสำหรับการติดป้ายกำกับแบบ row-by-row
+\end{enumerate}
+
+\section*{กิตติกรรมประกาศ}
+
+งานวิจัยนี้ใช้ Google's Gemini API สำหรับการประมวลผลภาษาธรรมชาติ และ PySwip สำหรับการเชื่อมต่อกับ Prolog
+
+\begin{thebibliography}{9}
+
+\bibitem{pyswip}
+PySwip: Python-SWI-Prolog bridge.
+\texttt{https://github.com/yuce/pyswip}
+
+\bibitem{gemini}
+Google Gemini API Documentation.
+\texttt{https://ai.google.dev/}
+
+\bibitem{prolog}
+Bratko, I. (2011). \textit{Prolog Programming for Artificial Intelligence}. Addison-Wesley.
+
+\bibitem{dataquality}
+Ratner, A., et al. (2017). Snorkel: Rapid training data creation with weak supervision. \textit{VLDB Endowment}, 11(3), 269-282.
+
+\bibitem{xai}
+Gunning, D., et al. (2019). XAI—Explainable artificial intelligence. \textit{Science Robotics}, 4(37).
+
+\end{thebibliography}
+
+\end{document}

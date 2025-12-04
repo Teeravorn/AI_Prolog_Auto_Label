@@ -2,3 +2,16 @@
 /archive
 __pycache__/gemini_api.cpython-313.pyc
 *.pyc
+
+## Documentation
+**/*.aux
+**/*.bbl
+**/*.blg
+**/*.fdb_latexmk
+**/*.log
+**/main.synctex.gz
+**/*.toc
+**/*.xdv
+**/*.fls
+**/*.out
+**/*.pdf

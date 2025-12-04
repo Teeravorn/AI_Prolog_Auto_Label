@@ -1,0 +1,20 @@
+% --- SQL ---
+\definecolor{sqlkeyword}{RGB}{0,0,150}
+\definecolor{sqlstring}{RGB}{150,0,0}
+\definecolor{sqlcomment}{RGB}{0,128,0}
+\definecolor{sqlbg}{RGB}{248,248,248}
+
+\lstdefinelanguage{SQL}{
+  morekeywords={
+    SELECT,FROM,WHERE,AND,OR,NOT,INSERT,INTO,VALUES,UPDATE,SET,DELETE,JOIN,LEFT,RIGHT,FULL,
+    OUTER,INNER,ON,AS,CREATE,DROP,ALTER,TABLE,VIEW,INDEX,PRIMARY,KEY,FOREIGN,REFERENCES,
+    GROUP,BY,ORDER,HAVING,DISTINCT,TOP,COUNT,SUM,AVG,MIN,MAX,NULL,IS,IN,EXISTS,BETWEEN,CASE,WHEN,THEN,END
+  },
+  keywordstyle=\color{sqlkeyword}\bfseries,
+  comment=[l]{--},
+  morecomment=[s]{/*}{*/},
+  commentstyle=\color{sqlcomment}\itshape,
+  stringstyle=\color{sqlstring},
+  morestring=[b]', morestring=[b]",
+  backgroundcolor=\color{sqlbg}
+}
