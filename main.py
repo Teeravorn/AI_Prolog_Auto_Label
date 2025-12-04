@@ -11,6 +11,7 @@ from lib.auto_label.query_engine_config import (
     get_source_csv_path,
     get_output_csv_path
 )
+from lib.auto_label.query_engine_config import get_kb_dir
 from render_graph import plot_labeled_results
 
 class Project_UI:
@@ -170,8 +171,8 @@ class Project_UI:
         print("Prolog Rule: \n"  + prolog_rule)
         formatted_rules = self.format_rules(prolog_rule, use_case, config)
         
-        prolog_rule = self.gemini.get_response(input_rule_text)
-        formatted_rules = self.format_rules(prolog_rule)
+        prolog_rule = self.gemini.get_response(input_rule_text, config)
+        formatted_rules = self.format_rules(prolog_rule, use_case, config)
 
         self.display_output("Result: \n"  + formatted_rules)
         self.applied_rules()
@@ -201,7 +202,7 @@ class Project_UI:
 
         return formatted_rules
 
-    def save_rules_to_file(self, split_rules, filename="generated_rules.pl"):
+    def save_rules_to_file(self, split_rules, use_case, config):
         """Persist a list of Prolog rules to the KB directory.
 
         The destination subdirectory is chosen based on the currently
@@ -216,15 +217,12 @@ class Project_UI:
             existing file with the same name). The function prints each
             rule to stdout as it writes it.
         """
-
-        use_case = ""
-        if "PM2.5" in self.selected_option.get():
-            use_case = "PM_Temperature"
-        elif "useCase2" in self.selected_option.get():
-            use_case = "useCase2"
-
-        KB_dir = "KB/{}/".format(use_case)
-        with open(os.path.join(KB_dir,filename), "w", encoding='utf-8') as f:
+        kb_dir = get_kb_dir(config)
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        rules_filename = f"generated_rules_{timestamp}.pl"
+        rules_file_path = os.path.join(kb_dir, use_case, rules_filename)
+        
+        with open(rules_file_path, "w", encoding='utf-8') as f:
             for rule in split_rules:
                 print("rule",rule)
                 f.write(rule + "\n")
