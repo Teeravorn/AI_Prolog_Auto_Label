@@ -1,8 +1,4 @@
 .env
 /archive
-.env
 __pycache__/gemini_api.cpython-313.pyc
-*.pyc
-.env
-*.pyc
 *.pyc
