@@ -10,7 +10,7 @@ class GEMINI_GOOGLE:
 
     def get_response(self, prompt):
 
-        prompt = "Translate to First Order Logic Prolog (Output only code, no markdown and description): {}".format(prompt)
+        prompt = "Translate to First Order Logic Prolog in English (Output only code 1 rule per line, no markdown and description): {}".format(prompt)
 
         response = self.client.models.generate_content(
             model="gemini-2.5-flash",
