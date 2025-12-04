@@ -1,7 +1,18 @@
-import tkinter as tk 
+import tkinter as tk
 from gemini_api import GEMINI_GOOGLE
 from tkinter import font
 import os
+from lib.auto_label.query_rule import apply_rule_to_csv
+from datetime import datetime
+import shutil
+from lib.auto_label.query_engine_config import (
+    load_config,
+    get_rules_file,
+    get_source_csv_path,
+    get_output_csv_path
+)
+from render_graph import plot_labeled_results
+
 class Project_UI:
     def __init__(self):
         """Initialize the Project UI.
@@ -149,14 +160,24 @@ class Project_UI:
             self.display_output("")
             return
 
+        # Load config for current use case
+        use_case = "PM_Temperature" if "PM2.5" in self.selected_option.get() else "useCase2"
+        config = load_config(use_case)
+        
         # Get Prolog rule from Gemini API
+        prolog_rule = self.gemini.get_response(input_rule_text, config)
+        # prolog_rule = input_rule_text
+        print("Prolog Rule: \n"  + prolog_rule)
+        formatted_rules = self.format_rules(prolog_rule, use_case, config)
+        
         prolog_rule = self.gemini.get_response(input_rule_text)
         formatted_rules = self.format_rules(prolog_rule)
 
         self.display_output("Result: \n"  + formatted_rules)
+        self.applied_rules()
         return prolog_rule
 
-    def format_rules(self, prolog_rules):
+    def format_rules(self, prolog_rules, use_case, config):
         """Format a Prolog rules string and persist it to the KB.
 
         Args:
@@ -175,7 +196,7 @@ class Project_UI:
         """
 
         split_rules = prolog_rules.strip().split('\n')
-        self.save_rules_to_file(split_rules)
+        self.current_rules_file = self.save_rules_to_file(split_rules, use_case, config)
         formatted_rules = "\n".join([str(num+1) + ") " +rule.strip() for num,rule in enumerate(split_rules)])
 
         return formatted_rules
@@ -207,6 +228,8 @@ class Project_UI:
             for rule in split_rules:
                 print("rule",rule)
                 f.write(rule + "\n")
+        
+        return rules_filename
 
     def display_output(self,output):
         """Update the result label text shown in the UI.
@@ -216,7 +239,39 @@ class Project_UI:
         """
 
         self.result_label["text"] = output
+        
+    def applied_rules(self):
+        # Apply rules to CSV and add auto-label column
+        use_case = "PM_Temperature" if "PM2.5" in self.selected_option.get() else "useCase2"
+        config = load_config(use_case)
+        
+        # Get paths from config
+        source_file = get_source_csv_path(config)
+        destination = get_output_csv_path(config)
+        
+        # Copy source file for usecase to new file before labeling
+        self.copy_source_file(source_file, destination)
+        try:
+            # Pass the rules filename to apply_rule_to_csv
+            rules_filename = getattr(self, 'current_rules_file', 'generated_rules.pl')
+            df_labeled = apply_rule_to_csv(use_case, destination, rules_file=rules_filename)
+            
+            # Get actual output path from query_rule (it uses get_output_csv_path internally)
+            output_path = get_output_csv_path(config)
+            print(f"Auto-labeling complete. Output saved to: {output_path}")
+            
+            # Plot graph after labeling
+            plot_labeled_results(output_path)
+        except Exception as e:
+            print(f"Error during auto-labeling: {e}")
 
+    def copy_source_file(self, source, destination):
+        if os.path.exists(source):
+            shutil.copy(source, destination)
+            print(f"Copied {source} to {destination}")
+        else:
+            print(f"Source file not found: {source}")
+            
 if __name__ == "__main__":
     app = Project_UI()
     app.mainloop()
