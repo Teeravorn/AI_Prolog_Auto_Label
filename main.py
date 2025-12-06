@@ -2,9 +2,10 @@ import tkinter as tk
 from gemini_api import GEMINI_GOOGLE
 from tkinter import font
 import os
-from lib.auto_label.query_rule import apply_rule_to_csv
 from datetime import datetime
 import shutil
+from lib.query_janus.apply_prolog import apply_rule_to_csv, save_labeled_csv
+from lib.query_janus.generate_graph import plot_graph_labeled_results_PM_temp
 from lib.auto_label.query_engine_config import (
     load_config,
     get_rules_file,
@@ -170,9 +171,6 @@ class Project_UI:
         # prolog_rule = input_rule_text
         print("Prolog Rule: \n"  + prolog_rule)
         formatted_rules = self.format_rules(prolog_rule, use_case, config)
-        
-        prolog_rule = self.gemini.get_response(input_rule_text, config)
-        formatted_rules = self.format_rules(prolog_rule, use_case, config)
 
         self.display_output("Result: \n"  + formatted_rules)
         self.applied_rules()
@@ -197,6 +195,7 @@ class Project_UI:
         """
 
         split_rules = prolog_rules.strip().split('\n')
+        print("split_rules",split_rules)
         self.current_rules_file = self.save_rules_to_file(split_rules, use_case, config)
         formatted_rules = "\n".join([str(num+1) + ") " +rule.strip() for num,rule in enumerate(split_rules)])
 
@@ -223,11 +222,12 @@ class Project_UI:
         rules_file_path = os.path.join(kb_dir, use_case, rules_filename)
         
         with open(rules_file_path, "w", encoding='utf-8') as f:
+            f.write(":- encoding(utf8).\n")  # กำหนด encoding เป็น UTF-8
             for rule in split_rules:
                 print("rule",rule)
                 f.write(rule + "\n")
         
-        return rules_filename
+        return rules_file_path
 
     def display_output(self,output):
         """Update the result label text shown in the UI.
@@ -251,15 +251,22 @@ class Project_UI:
         self.copy_source_file(source_file, destination)
         try:
             # Pass the rules filename to apply_rule_to_csv
-            rules_filename = getattr(self, 'current_rules_file', 'generated_rules.pl')
-            df_labeled = apply_rule_to_csv(use_case, destination, rules_file=rules_filename)
-            
-            # Get actual output path from query_rule (it uses get_output_csv_path internally)
+            rules_file_path = self.current_rules_file
+            df_labeled = apply_rule_to_csv(use_case, destination, rules_file=rules_file_path)
             output_path = get_output_csv_path(config)
-            print(f"Auto-labeling complete. Output saved to: {output_path}")
+        
+            if df_labeled is not None:
+                # output_csv_path = "data/PM_Temp_labeled.csv"
+                save_labeled_csv(df_labeled, output_path)
+                print(f"Auto-labeling complete. Output saved to: {output_path}")
+
+            # Get actual output path from query_rule (it uses get_output_csv_path internally)
+            
             
             # Plot graph after labeling
-            plot_labeled_results(output_path)
+            plot_graph_labeled_results_PM_temp(output_path)
+
+            # plot_labeled_results(output_path)
         except Exception as e:
             print(f"Error during auto-labeling: {e}")
 

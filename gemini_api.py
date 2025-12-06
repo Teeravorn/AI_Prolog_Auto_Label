@@ -17,10 +17,9 @@ class GEMINI_GOOGLE:
         # Get prompt template from config
         template = get_prompt_template(config)
         prompt_template = template.format(
-            var_descriptions=var_descriptions,
-            user_input=prompt
+            input_rules=prompt
         )
-        
+
         response = self.client.models.generate_content(
             model="gemini-2.5-flash",
             contents=prompt_template,
