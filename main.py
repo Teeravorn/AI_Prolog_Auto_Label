@@ -172,8 +172,8 @@ class Project_UI:
         print("Prolog Rule: \n"  + prolog_rule)
         formatted_rules = self.format_rules(prolog_rule, use_case, config)
         
-        prolog_rule = self.gemini.get_response(input_rule_text, config)
-        formatted_rules = self.format_rules(prolog_rule, use_case, config)
+        # prolog_rule = self.gemini.get_response(input_rule_text, config)
+        # formatted_rules = self.format_rules(prolog_rule, use_case, config)
 
         self.display_output("Result: \n"  + formatted_rules)
         self.applied_rules()
@@ -224,6 +224,7 @@ class Project_UI:
         rules_file_path = os.path.join(kb_dir, use_case, rules_filename)
         
         with open(rules_file_path, "w", encoding='utf-8') as f:
+            f.write(":- encoding(utf8).\n")  # กำหนด encoding เป็น UTF-8
             for rule in split_rules:
                 print("rule",rule)
                 f.write(rule + "\n")

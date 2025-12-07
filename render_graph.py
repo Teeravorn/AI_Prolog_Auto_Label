@@ -21,20 +21,27 @@ def plot_labeled_results(csv_path):
     try:
         df = pd.read_csv(csv_path)
         
+        df["Date"] = df["Date"] + " " + df["Time"]
+
         # Create figure with subplots
+        plt.rcParams.update({'font.family': 'tahoma'})
         fig, axes = plt.subplots(2, 1, figsize=(12, 10))
         
         # Plot 1: PM2.5 and Temperature over time with label areas
         ax1 = axes[0]
-        ax1.plot(df.index, df['PM2.5'], label='PM2.5', color='red', alpha=0.7, linewidth=2, zorder=3)
+        # ax1.plot(df.index, df['PM2.5'], label='PM2.5', color='red', alpha=0.7, linewidth=2, zorder=3)
+        ax1.plot(df["Date"], df['PM2.5'], label='PM2.5', color='red', alpha=0.7, linewidth=2, zorder=3)
         ax1.set_ylabel('PM2.5 (μg/m³)', color='red', fontsize=12)
         ax1.tick_params(axis='y', labelcolor='red')
-        ax1.set_xlabel('Row Index', fontsize=12)
+        # ax1.set_xlabel('Row Index', fontsize=12)
+        ax1.set_xlabel('DateTime', fontsize=12)
+        ax1.set_xticks(ax1.get_xticks(), ax1.get_xticklabels(), rotation=60, ha='right')
         ax1.legend(loc='upper left', fontsize=10)
         ax1.grid(True, alpha=0.3)
         
         ax1_twin = ax1.twinx()
-        ax1_twin.plot(df.index, df['Temp'], label='Temperature', color='blue', alpha=0.7, linewidth=2, zorder=3)
+        # ax1_twin.plot(df.index, df['Temp'], label='Temperature', color='blue', alpha=0.7, linewidth=2, zorder=3)
+        ax1_twin.plot(df["Date"], df['Temp'], label='Temperature', color='blue', alpha=0.7, linewidth=2, zorder=3)
         ax1_twin.set_ylabel('Temperature (°C)', color='blue', fontsize=12)
         ax1_twin.tick_params(axis='y', labelcolor='blue')
         ax1_twin.legend(loc='upper right', fontsize=10)
@@ -132,7 +139,7 @@ def plot_labeled_results(csv_path):
             ax2.set_title('Label Distribution', fontsize=14, fontweight='bold')
             ax2.set_xlabel('Labels', fontsize=12)
             ax2.set_ylabel('Count', fontsize=12)
-            ax2.tick_params(axis='x', rotation=45)
+            ax2.tick_params(axis='x', rotation=0)
             ax2.grid(True, alpha=0.3, axis='y')
             
             # Add count labels on bars
