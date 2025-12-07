@@ -1,0 +1,73 @@
+No.,Date,Time,Temp,PM2.5,auto_label,rules_file
+1,2025-11-30,1:00,24,54.0,Moderate to high concentration,generated_rules_20251207_180551.pl
+2,2025-11-30,2:00,23,52.9,Moderate to high concentration,generated_rules_20251207_180551.pl
+3,2025-11-30,3:00,23,50.3,Moderate to high concentration,generated_rules_20251207_180551.pl
+4,2025-11-30,4:00,22,52.1,Moderate to high concentration,generated_rules_20251207_180551.pl
+5,2025-11-30,5:00,22,59.2,Moderate to high concentration,generated_rules_20251207_180551.pl
+6,2025-11-30,6:00,22,58.8,Moderate to high concentration,generated_rules_20251207_180551.pl
+7,2025-11-30,7:00,21,60.7,Moderate to high concentration,generated_rules_20251207_180551.pl
+8,2025-11-30,8:00,22,56.8,Moderate to high concentration,generated_rules_20251207_180551.pl
+9,2025-11-30,9:00,23,53.5,Moderate to high concentration,generated_rules_20251207_180551.pl
+10,2025-11-30,10:00,25,49.2,Moderate to high concentration,generated_rules_20251207_180551.pl
+11,2025-11-30,11:00,27,40.5,,generated_rules_20251207_180551.pl
+12,2025-11-30,12:00,28,38.1,,generated_rules_20251207_180551.pl
+13,2025-11-30,13:00,29,37.3,,generated_rules_20251207_180551.pl
+14,2025-11-30,14:00,29,38.1,,generated_rules_20251207_180551.pl
+15,2025-11-30,15:00,29,40.9,,generated_rules_20251207_180551.pl
+16,2025-11-30,16:00,29,40.2,,generated_rules_20251207_180551.pl
+17,2025-11-30,17:00,28,38.7,,generated_rules_20251207_180551.pl
+18,2025-11-30,18:00,28,37.5,,generated_rules_20251207_180551.pl
+19,2025-11-30,19:00,27,39.3,,generated_rules_20251207_180551.pl
+20,2025-11-30,20:00,27,42.6,,generated_rules_20251207_180551.pl
+21,2025-11-30,21:00,26,46.2,Moderate to high concentration,generated_rules_20251207_180551.pl
+22,2025-11-30,22:00,26,48.9,Moderate to high concentration,generated_rules_20251207_180551.pl
+23,2025-11-30,23:00,26,49.5,Moderate to high concentration,generated_rules_20251207_180551.pl
+24,2025-11-30,0:00,25,48.2,Moderate to high concentration,generated_rules_20251207_180551.pl
+25,2025-12-01,1:00,25,46.4,Moderate to high concentration,generated_rules_20251207_180551.pl
+26,2025-12-01,2:00,25,51.1,Moderate to high concentration,generated_rules_20251207_180551.pl
+27,2025-12-01,3:00,25,52.3,Moderate to high concentration,generated_rules_20251207_180551.pl
+28,2025-12-01,4:00,24,49.1,Moderate to high concentration,generated_rules_20251207_180551.pl
+29,2025-12-01,5:00,23,60.5,Moderate to high concentration,generated_rules_20251207_180551.pl
+30,2025-12-01,6:00,23,66.8,Moderate to high concentration,generated_rules_20251207_180551.pl
+31,2025-12-01,7:00,23,64.1,Moderate to high concentration,generated_rules_20251207_180551.pl
+32,2025-12-01,8:00,24,62.2,Moderate to high concentration,generated_rules_20251207_180551.pl
+33,2025-12-01,9:00,25,58.3,Moderate to high concentration,generated_rules_20251207_180551.pl
+34,2025-12-01,10:00,27,51.8,Moderate to high concentration,generated_rules_20251207_180551.pl
+35,2025-12-01,11:00,29,47.7,Moderate to high concentration,generated_rules_20251207_180551.pl
+36,2025-12-01,12:00,30,46.8,Moderate to high concentration,generated_rules_20251207_180551.pl
+37,2025-12-01,13:00,31,42.9,Hot and turbulent atmosphere,generated_rules_20251207_180551.pl
+38,2025-12-01,14:00,31,39.4,Hot and turbulent atmosphere,generated_rules_20251207_180551.pl
+39,2025-12-01,15:00,30,42.6,,generated_rules_20251207_180551.pl
+40,2025-12-01,16:00,30,39.8,,generated_rules_20251207_180551.pl
+41,2025-12-01,17:00,30,39.9,,generated_rules_20251207_180551.pl
+42,2025-12-01,18:00,29,41.7,,generated_rules_20251207_180551.pl
+43,2025-12-01,19:00,28,42.9,,generated_rules_20251207_180551.pl
+44,2025-12-01,20:00,27,42.4,,generated_rules_20251207_180551.pl
+45,2025-12-01,21:00,27,49.9,Moderate to high concentration,generated_rules_20251207_180551.pl
+46,2025-12-01,22:00,27,51.8,Moderate to high concentration,generated_rules_20251207_180551.pl
+47,2025-12-01,23:00,27,48.5,Moderate to high concentration,generated_rules_20251207_180551.pl
+48,2025-12-01,0:00,27,54.8,Moderate to high concentration,generated_rules_20251207_180551.pl
+49,2025-12-02,1:00,26,58.7,Moderate to high concentration,generated_rules_20251207_180551.pl
+50,2025-12-02,2:00,26,57.6,Moderate to high concentration,generated_rules_20251207_180551.pl
+51,2025-12-02,3:00,26,62.6,Moderate to high concentration,generated_rules_20251207_180551.pl
+52,2025-12-02,4:00,25,60.2,Moderate to high concentration,generated_rules_20251207_180551.pl
+53,2025-12-02,5:00,25,64.7,Moderate to high concentration,generated_rules_20251207_180551.pl
+54,2025-12-02,6:00,24,69.2,Moderate to high concentration,generated_rules_20251207_180551.pl
+55,2025-12-02,7:00,24,71.4,Moderate to high concentration,generated_rules_20251207_180551.pl
+56,2025-12-02,8:00,25,68.8,Moderate to high concentration,generated_rules_20251207_180551.pl
+57,2025-12-02,9:00,26,63.3,Moderate to high concentration,generated_rules_20251207_180551.pl
+58,2025-12-02,10:00,28,57.5,Moderate to high concentration,generated_rules_20251207_180551.pl
+59,2025-12-02,11:00,30,51.0,Moderate to high concentration,generated_rules_20251207_180551.pl
+60,2025-12-02,12:00,31,40.6,Hot and turbulent atmosphere,generated_rules_20251207_180551.pl
+61,2025-12-02,13:00,32,39.1,Hot and turbulent atmosphere,generated_rules_20251207_180551.pl
+62,2025-12-02,14:00,33,37.0,Hot and turbulent atmosphere,generated_rules_20251207_180551.pl
+63,2025-12-02,15:00,32,38.4,Hot and turbulent atmosphere,generated_rules_20251207_180551.pl
+64,2025-12-02,16:00,32,40.6,Hot and turbulent atmosphere,generated_rules_20251207_180551.pl
+65,2025-12-02,17:00,31,42.4,Hot and turbulent atmosphere,generated_rules_20251207_180551.pl
+66,2025-12-02,18:00,30,39.3,,generated_rules_20251207_180551.pl
+67,2025-12-02,19:00,29,41.7,,generated_rules_20251207_180551.pl
+68,2025-12-02,20:00,28,45.4,Moderate to high concentration,generated_rules_20251207_180551.pl
+69,2025-12-02,21:00,28,41.2,,generated_rules_20251207_180551.pl
+70,2025-12-02,22:00,28,47.0,Moderate to high concentration,generated_rules_20251207_180551.pl
+71,2025-12-02,23:00,28,49.4,Moderate to high concentration,generated_rules_20251207_180551.pl
+72,2025-12-02,0:00,27,52.1,Moderate to high concentration,generated_rules_20251207_180551.pl

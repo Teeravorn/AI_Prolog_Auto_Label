@@ -5,15 +5,15 @@
     "kb_dir": "KB",
     "data_dir": "data",
     "rules_file": "generated_rules_rain.pl",
-    "source_csv": "weather_sample.csv",
+    "source_csv": "weather_monthly_30days_prepped.csv",
     "output_csv_pattern": "weather_labeled_{datetime}.csv"
   },
   "dataset": {
-    "source_file": "data/weather_sample.csv",
+    "source_file": "data/weather_monthly_30days_prepped.csv",
     "columns": [
       {"name": "Date", "type": "date", "prolog_name": "date"},
       {"name": "Time", "type": "time", "prolog_name": "TimeHour"},
-      {"name": "Temp", "type": "numeric", "prolog_name": "Temperature"},
+      {"name": "Temp", "type": "numeric", "prolog_name": "Temp"},
       {"name": "Humidity", "type": "numeric", "prolog_name": "Humidity"},
       {"name": "Pressure", "type": "numeric", "prolog_name": "Pressure"},
       {"name": "WindSpeed", "type": "numeric", "prolog_name": "WindSpeed"},
@@ -26,12 +26,13 @@
     "multi_label": true
   },
   "prolog_variables": [
-    {"csv_column": "Temp", "prolog_name": "Temperature", "type": "numeric"},
+    {"csv_column": "Temp", "prolog_name": "Temp", "type": "numeric"},
     {"csv_column": "Humidity", "prolog_name": "Humidity", "type": "numeric"},
     {"csv_column": "Pressure", "prolog_name": "Pressure", "type": "numeric"},
     {"csv_column": "PressureDrop", "prolog_name": "PressureDrop", "type": "numeric"},
     {"csv_column": "WindSpeed", "prolog_name": "WindSpeed", "type": "numeric"},
     {"csv_column": "Rainfall", "prolog_name": "Rainfall", "type": "numeric"}
   ],
-  "prompt_template": "Generate Prolog rules for rain forecasting. Variables: Temperature, Humidity, Pressure, PressureDrop, WindSpeed, Rainfall. Provide helper predicates (no label) and label predicates named label_rain_forecast(...) where label is the final argument in single quotes. Output one Prolog rule per line, no explanation."
-}
+  
+  "prompt_template": "แปลภาษาธรรมชาติเป็น First Order Logic Prolog (ให้ output เฉพาะโค้ด 1 กฎต่อ 1 บรรทัด ไม่ต้องมี markdown หรือคำอธิบาย)\n\nกฎสำคัญในการเขียน Prolog:\n- ใช้รูปแบบ: ชื่อ_predicate(ตัวแปร, 'ป้ายกำกับ') :- เงื่อนไข.\n- สำหรับกฎการติดป้ายกำกับ ต้องมีป้ายกำกับเป็น argument ที่สองด้วยเครื่องหมาย single quotes เสมอ\n- ใช้ตัวพิมพ์เล็กสำหรับ predicates และตัวแปรต้องขึ้นต้นด้วยตัวพิมพ์ใหญ่\n- ใช้ตัวดำเนินการ Prolog ที่ถูกต้อง: =< (น้อยกว่าหรือเท่ากับ), >= (มากกว่าหรือเท่ากับ), > (มากกว่า), < (น้อยกว่า)\n\n**รูปแบบการใช้ตัวแปร (สำคัญมาก):**\n- ถ้าใช้ตัวแปรเดียว: predicate(Variable, 'label') :- condition.\n- ถ้าใช้หลายตัวแปร: predicate(Var1, Var2, Var3, 'label') :- condition.\n- ห้ามใช้ compound structure แบบ data(...) หรือ temp_pm(...)\n- ตัวอย่างที่ถูกต้อง:\n  good_weather(Temperature, PM2_5, TimeHour, 'สภาพอากาศดี') :- Temperature < 30, PM2_5 < 25, TimeHour >= 6, TimeHour =< 11.\n- ตัวอย่างที่ผิด:\n  good_weather(data(T, P, H), 'สภาพอากาศดี') :- ... % ห้ามใช้!\n\n**รองรับ Chain Rules (กฎแบบลูกโซ่):**\n- สามารถสร้าง helper predicates เพื่อใช้ในกฎหลักได้\n- Helper predicates ไม่ต้องมี label argument\n- ตัวอย่างการใช้ chain rules:\n  % Helper predicates (ไม่มี label)\n  high_temp(Temperature) :- Temperature > 30.\n  high_pm(PM2_5) :- PM2_5 > 60.\n  morning(TimeHour) :- TimeHour >= 6, TimeHour =< 11.\n  \n  % Main labeling rule (มี label เป็น argument สุดท้าย)\n  severe_condition(Temperature, PM2_5, TimeHour, 'สภาพวิกฤติ') :- high_temp(Temperature), high_pm(PM2_5), morning(TimeHour).\n{var_descriptions}\nตัวอย่างรูปแบบ:\n% Helper predicates (รับตัวแปรแยก ไม่มี label)\nhigh_pm(PM2_5) :- PM2_5 > 60.\nmedium_pm(PM2_5) :- PM2_5 >= 45, PM2_5 =< 60.\nlow_pm(PM2_5) :- PM2_5 < 45.\ncool_temp(Temperature) :- Temperature < 25.\nmorning(TimeHour) :- TimeHour >= 6, TimeHour =< 11.\n\n% Labeling rules (รับตัวแปรแยกตามลำดับ, label เป็น argument สุดท้าย)\nlabel_air_quality(PM2_5, 'อันตราย') :- high_pm(PM2_5).\nlabel_air_quality(PM2_5, 'เสี่ยง') :- medium_pm(PM2_5).\nlabel_air_quality(PM2_5, 'ปลอดภัย') :- low_pm(PM2_5).\nmorning_weather(Temperature, PM2_5, TimeHour, 'เช้าอากาศดี') :- cool_temp(Temperature), low_pm(PM2_5), morning(TimeHour).\n\nคำสั่งจากผู้ใช้: {user_input}"
+  }

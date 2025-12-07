@@ -205,14 +205,17 @@ def plot_rain_labeled_dataframe(df, save_path=None):
     ax1 = axes[0]
 
     # Plot Temperature on left axis
-    ax1.plot(df_plot.index, df_plot['Temperature'], label='Temperature (°C)', color='orange', linewidth=2, zorder=3)
+    ax1.plot(df_plot["Date"], df_plot['Temperature'], label='Temperature (°C)', color='orange', linewidth=2, zorder=3)
+    # ax1.plot(df_plot.index, df_plot['Temperature'], label='Temperature (°C)', color='orange', linewidth=2, zorder=3)
     ax1.set_ylabel('Temperature (°C)', color='orange', fontsize=12)
     ax1.tick_params(axis='y', labelcolor='orange')
-    ax1.set_xlabel('Day Index', fontsize=12)
+    ax1.set_xlabel('Day', fontsize=12)
+    ax1.set_xticks(ax1.get_xticks(), ax1.get_xticklabels(), rotation=60, ha='right')
     ax1.grid(True, alpha=0.3)
 
     # Twin axis for Humidity
     ax1_twin = ax1.twinx()
+    ax1_twin.plot(df_plot["Date"], df_plot['Humidity'], label='Humidity (%)', color='steelblue', linewidth=2, alpha=0.7, zorder=3)
     ax1_twin.plot(df_plot.index, df_plot['Humidity'], label='Humidity (%)', color='steelblue', linewidth=2, alpha=0.7, zorder=3)
     ax1_twin.set_ylabel('Humidity (%)', color='steelblue', fontsize=12)
     ax1_twin.tick_params(axis='y', labelcolor='steelblue')
