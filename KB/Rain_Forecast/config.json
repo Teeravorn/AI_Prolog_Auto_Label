@@ -1,0 +1,37 @@
+{
+  "use_case": "Rain_Forecast",
+  "description": "Simple rain forecast labeling based on humidity, pressure and pressure drop",
+  "paths": {
+    "kb_dir": "KB",
+    "data_dir": "data",
+    "rules_file": "generated_rules_rain.pl",
+    "source_csv": "weather_sample.csv",
+    "output_csv_pattern": "weather_labeled_{datetime}.csv"
+  },
+  "dataset": {
+    "source_file": "data/weather_sample.csv",
+    "columns": [
+      {"name": "Date", "type": "date", "prolog_name": "date"},
+      {"name": "Time", "type": "time", "prolog_name": "TimeHour"},
+      {"name": "Temp", "type": "numeric", "prolog_name": "Temperature"},
+      {"name": "Humidity", "type": "numeric", "prolog_name": "Humidity"},
+      {"name": "Pressure", "type": "numeric", "prolog_name": "Pressure"},
+      {"name": "WindSpeed", "type": "numeric", "prolog_name": "WindSpeed"},
+      {"name": "Rainfall", "type": "numeric", "prolog_name": "Rainfall"},
+      {"name": "PressureDrop", "type": "numeric", "prolog_name": "PressureDrop"}
+    ]
+  },
+  "labeling": {
+    "label_column": "auto_label",
+    "multi_label": true
+  },
+  "prolog_variables": [
+    {"csv_column": "Temp", "prolog_name": "Temperature", "type": "numeric"},
+    {"csv_column": "Humidity", "prolog_name": "Humidity", "type": "numeric"},
+    {"csv_column": "Pressure", "prolog_name": "Pressure", "type": "numeric"},
+    {"csv_column": "PressureDrop", "prolog_name": "PressureDrop", "type": "numeric"},
+    {"csv_column": "WindSpeed", "prolog_name": "WindSpeed", "type": "numeric"},
+    {"csv_column": "Rainfall", "prolog_name": "Rainfall", "type": "numeric"}
+  ],
+  "prompt_template": "Generate Prolog rules for rain forecasting. Variables: Temperature, Humidity, Pressure, PressureDrop, WindSpeed, Rainfall. Provide helper predicates (no label) and label predicates named label_rain_forecast(...) where label is the final argument in single quotes. Output one Prolog rule per line, no explanation."
+}

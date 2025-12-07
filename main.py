@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import tkinter as tk
 from gemini_api import GEMINI_GOOGLE
 from tkinter import font
@@ -12,7 +13,7 @@ from lib.auto_label.query_engine_config import (
     get_output_csv_path
 )
 from lib.auto_label.query_engine_config import get_kb_dir
-from render_graph import plot_labeled_results
+from render_graph import plot_labeled_results, plot_rain_results
 
 class Project_UI:
     def __init__(self):
@@ -123,9 +124,9 @@ class Project_UI:
         # Radio Buttons case 2
         rb2 = tk.Radiobutton(
             options_frame,
-            text="useCase2",
+            text="Rainfall",
             variable=self.selected_option,
-            value="useCase2",
+            value="Rainfall",
             bg="white",
         )
         rb2.pack(anchor="w", pady=2)
@@ -156,13 +157,13 @@ class Project_UI:
             ``None`` if the input was empty.
         """
 
-        input_rule_text : str = self.text_input.get('1.0', 'end-1c')
+        input_rule_text: str = self.text_input.get('1.0', 'end-1c')
         if input_rule_text.strip() == "":
             self.display_output("")
             return
 
         # Load config for current use case
-        use_case = "PM_Temperature" if "PM2.5" in self.selected_option.get() else "useCase2"
+        use_case = "PM_Temperature" if "PM2.5" in self.selected_option.get() else "Rain_Forecast"
         config = load_config(use_case)
         
         # Get Prolog rule from Gemini API
@@ -240,7 +241,7 @@ class Project_UI:
         
     def applied_rules(self):
         # Apply rules to CSV and add auto-label column
-        use_case = "PM_Temperature" if "PM2.5" in self.selected_option.get() else "useCase2"
+        use_case = "PM_Temperature" if "PM2.5" in self.selected_option.get() else "Rain_Forecast"
         config = load_config(use_case)
         
         # Get paths from config
@@ -258,8 +259,11 @@ class Project_UI:
             output_path = get_output_csv_path(config)
             print(f"Auto-labeling complete. Output saved to: {output_path}")
             
-            # Plot graph after labeling
-            plot_labeled_results(output_path)
+            # Plot graph after labeling - use appropriate plotting function based on use case
+            if use_case == "Rain_Forecast":
+                plot_rain_results(output_path)
+            else:
+                plot_labeled_results(output_path)
         except Exception as e:
             print(f"Error during auto-labeling: {e}")
 
